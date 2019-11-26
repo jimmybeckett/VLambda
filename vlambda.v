@@ -31,7 +31,7 @@ let fix evalAux (expr : Expr) (maxDepth : nat) : option Expr :=
     | None => None 
     | Some body' => Some (Abstraction bound body')
     end
-  | Var s, S _ => Some expr
+  | Var _, S _ => Some expr
   | _, O => None (* max recursion depth reached *)
   end
 in evalAux expr 4096 (* arbitrarily chosen max recursion depth *).
