@@ -1,9 +1,9 @@
 Require Import String.
 
 Inductive Expr : Type :=
-| Var (name : string)
-| Combination (expr1 : Expr) (expr2 : Expr)
-| Abstraction (bound : string) (body : Expr).
+  | Var (name : string)
+  | Combination (expr1 : Expr) (expr2 : Expr)
+  | Abstraction (bound : string) (body : Expr).
 
 (* Scuffed beta reduction, does not distinguish between different variables with the same name *)
 Definition betaReduce (expr : Expr) (old : string) (new : Expr) : Expr :=
