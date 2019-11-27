@@ -50,13 +50,13 @@ Definition T := L "a" | L "b" | $"a".
 Definition F := L "c" | L "d" | $"d". 
 Definition and :=  L "x" | L "y" | ((($"x") ($"y")) (F)).
 
+
+Definition inf := (L "a" | (($"a") ($"a"))) (L "a" | (($"a") ($"a"))).
+
+Compute eval inf.
+
 Compute eval (((and) (T)) (T)). (* T *)
 Compute eval (((and) (T)) (F)). (* F *)
 Compute eval (((and) (F)) (T)). (* F *)
 Compute eval (((and) (F)) (F)). (* F *)
-
-
-
-
-
 
