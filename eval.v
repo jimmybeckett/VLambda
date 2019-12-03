@@ -15,6 +15,7 @@ Definition betaReduce (expr : Expr) (old : string) (new : Expr) : Expr :=
       end
   in substitute expr.
 
+(* Returns Some expr' if a step is taken, and None if no step is possible *)
 Fixpoint step (expr : Expr) : option Expr :=
   match expr with
   | Combination (Abstraction bound body) arg => Some (betaReduce body bound arg)
@@ -33,15 +34,11 @@ Fixpoint step (expr : Expr) : option Expr :=
   end.
 
 (* Lambda calculus small-step semantics *)
-Fixpoint eval_step_depth (expr : Expr) (maxSteps : nat) : option Expr :=
-  match step expr, maxSteps with
-  | _, O => None
-  | Some expr', S n' => eval_step_depth expr' n'
-  | None, S n' => Some expr
+Fixpoint take_n_steps (expr : Expr) (n : nat) : Expr :=
+  match step expr, n with
+  | Some expr', S n' => take_n_steps expr' n'
+  | _, _ => expr
   end.
-
-Definition eval_step (expr : Expr) : option Expr :=
-  eval_step_depth expr 4096. (* arbitrarily chosen max steps *)
 
 (* Lambda calculus big-step semantics *)
 Fixpoint eval_depth (expr : Expr) (maxDepth : nat) : option Expr :=
@@ -72,17 +69,16 @@ Notation "'L' x | y" := (Abstraction x y) (at level 70, right associativity).
 Notation "( x ) ( y )" := (Combination x y) (at level 80).
 Notation "$ x" := (Var x) (at level 90).
 
-
 (* A simple example, using booleans *)
 (* Definitions all use different variables to avoid breaking scuffed beta reduction *)
 Definition T := L "a" | L "b" | $"a".
 Definition F := L "c" | L "d" | $"d". 
 Definition and :=  L "x" | L "y" | ((($"x") ($"y")) (F)).
 
-Compute eval_step (((and) (T)) (T)). (* T *)
-Compute eval_step (((and) (T)) (F)). (* F *)
-Compute eval_step (((and) (F)) (T)). (* F *)
-Compute eval_step (((and) (F)) (F)). (* F *)
+Compute eval (((and) (T)) (T)). (* T *)
+Compute eval (((and) (T)) (F)). (* F *)
+Compute eval (((and) (F)) (T)). (* F *)
+Compute eval (((and) (F)) (F)). (* F *)
 
 
 
