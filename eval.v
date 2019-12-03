@@ -65,6 +65,18 @@ Fixpoint eval_depth (expr : Expr) (maxDepth : nat) : option Expr :=
 Definition eval (expr : Expr) : option Expr :=
   eval_depth expr 4096 (* arbitrarily chosen max recursion depth *).
 
+(* Exact (not alpha!) equality. Simplifies a reasonable amount before comparing. *)
+Definition equalExpr (expr1 : Expr) (expr2 : Expr) : bool :=
+  let fix equalExprSimp (expr1 : Expr) (expr2 : Expr) : bool :=
+    match expr1, expr2 with
+      | Combination e1 e2, Combination e1' e2' => andb (equalExprSimp e1 e1') (equalExprSimp e2 e2')
+      | Abstraction bound body, Abstraction bound' body' => 
+        andb (eqb bound bound') (equalExprSimp body body')
+      | Var v, Var v' => eqb v v'
+      | _, _ => false
+    end in
+  equalExprSimp (eval_step expr1) (eval_step expr2).
+
 (* Will write real parser later, this will do for now *)
 (* lambda x.lambda y.xy ==> L "x" | L "y" | (($"x") ($"y")) *)
 Notation "'L' x | y" := (Abstraction x y) (at level 70, right associativity).
