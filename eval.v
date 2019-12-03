@@ -15,27 +15,56 @@ Definition betaReduce (expr : Expr) (old : string) (new : Expr) : Expr :=
       end
   in substitute expr.
 
-Definition eval (expr : Expr) : option Expr :=
-  let fix evalAux (expr : Expr) (maxDepth : nat) : option Expr :=
-      match expr, maxDepth with
-      | Combination e1 e2, S maxDepth' => 
-        let e1' := evalAux e1 maxDepth' in
-        let e2' := evalAux e2 maxDepth' in
-          match e1', e2' with
-          | Some (Abstraction bound body), Some arg  => evalAux (betaReduce body bound arg) maxDepth'
-          | Some e1'', Some e2'' => Some (Combination e1'' e2'')
-          | _, _ => None
-          end
-      | Abstraction bound body, S maxDepth' => 
-        match evalAux body maxDepth' with 
-        | None => None 
-        | Some body' => Some (Abstraction bound body')
-        end
-      | Var _, S _ => Some expr
-      | _, O => None (* max recursion depth reached *)
-      end
-  in evalAux expr 4096 (* arbitrarily chosen max recursion depth *).
+Fixpoint step (expr : Expr) : option Expr :=
+  match expr with
+  | Combination (Abstraction bound body) arg => Some (betaReduce body bound arg)
+  | Combination e1 e2 => match step e1 with
+                          | Some e1' => Some (Combination e1' e2)
+                          | None => match step e2 with
+                                    | Some e2' => Some (Combination e1 e2')
+                                    | None => None
+                                    end
+                          end
+  | Abstraction bound body => match step body with
+                              | Some body' => Some (Abstraction bound body')
+                              | None => None
+                              end
+  | Var _ => None
+  end.
 
+(* Lambda calculus small-step semantics *)
+Fixpoint eval_step_depth (expr : Expr) (maxSteps : nat) : option Expr :=
+  match step expr, maxSteps with
+  | _, O => None
+  | Some expr', S n' => eval_step_depth expr' n'
+  | None, S n' => Some expr
+  end.
+
+Definition eval_step (expr : Expr) : option Expr :=
+  eval_step_depth expr 4096. (* arbitrarily chosen max steps *)
+
+(* Lambda calculus big-step semantics *)
+Fixpoint eval_depth (expr : Expr) (maxDepth : nat) : option Expr :=
+  match expr, maxDepth with
+  | Combination e1 e2, S maxDepth' => 
+    let e1' := eval_depth e1 maxDepth' in
+    let e2' := eval_depth e2 maxDepth' in
+      match e1', e2' with
+      | Some (Abstraction bound body), Some arg  => eval_depth (betaReduce body bound arg) maxDepth'
+      | Some e1'', Some e2'' => Some (Combination e1'' e2'')
+      | _, _ => None
+      end
+  | Abstraction bound body, S maxDepth' => 
+    match eval_depth body maxDepth' with 
+    | None => None 
+    | Some body' => Some (Abstraction bound body')
+    end
+  | Var _, S _ => Some expr
+  | _, O => None (* max recursion depth reached *)
+  end.
+
+Definition eval (expr : Expr) : option Expr :=
+  eval_depth expr 4096 (* arbitrarily chosen max recursion depth *).
 
 (* Will write real parser later, this will do for now *)
 (* lambda x.lambda y.xy ==> L "x" | L "y" | (($"x") ($"y")) *)
@@ -50,13 +79,13 @@ Definition T := L "a" | L "b" | $"a".
 Definition F := L "c" | L "d" | $"d". 
 Definition and :=  L "x" | L "y" | ((($"x") ($"y")) (F)).
 
+Compute eval_step (((and) (T)) (T)). (* T *)
+Compute eval_step (((and) (T)) (F)). (* F *)
+Compute eval_step (((and) (F)) (T)). (* F *)
+Compute eval_step (((and) (F)) (F)). (* F *)
 
-Definition inf := (L "a" | (($"a") ($"a"))) (L "a" | (($"a") ($"a"))).
 
-Compute eval inf.
 
-Compute eval (((and) (T)) (T)). (* T *)
-Compute eval (((and) (T)) (F)). (* F *)
-Compute eval (((and) (F)) (T)). (* F *)
-Compute eval (((and) (F)) (F)). (* F *)
+
+
 
