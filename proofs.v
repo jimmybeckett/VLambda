@@ -4,7 +4,7 @@ Require Import Logic.
 Add LoadPath "~/cse/VLambda".
 Load eval.
 
-(* Exact (not alpha!) equality *)
+(* Exact (not alpha!) equality. Simplifies a reasonable amount before comparing. *)
 Definition equalExpr (expr1 : Expr) (expr2 : Expr) : bool :=
   let fix equalExprSimp (expr1 : Expr) (expr2 : Expr) : bool :=
     match expr1, expr2 with

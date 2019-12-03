@@ -83,8 +83,3 @@ Compute eval (((and) (T)) (F)). (* F *)
 Compute eval (((and) (F)) (T)). (* F *)
 Compute eval (((and) (F)) (F)). (* F *)
 
-
-
-
-
-
