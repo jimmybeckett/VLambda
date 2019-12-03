@@ -40,8 +40,7 @@ Fixpoint take_n_steps (expr : Expr) (n : nat) : Expr :=
   end.
 
 (* Evaluate using small-step semantics *)
-Definition eval_step (expr : Expr) : Expr :=
-take_n_steps expr 4096.
+Definition eval_step (expr : Expr) : Expr := take_n_steps expr 4096.
 
 (* Lambda calculus big-step semantics *)
 Fixpoint eval_depth (expr : Expr) (maxDepth : nat) : option Expr :=
