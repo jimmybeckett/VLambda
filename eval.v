@@ -5,13 +5,14 @@ Inductive Expr : Type :=
   | Combination (expr1 : Expr) (expr2 : Expr)
   | Abstraction (bound : string) (body : Expr).
 
-(* Scuffed beta reduction, does not distinguish between different variables with the same name *)
 Definition betaReduce (expr : Expr) (old : string) (new : Expr) : Expr :=
   let fix substitute (expr : Expr) : Expr :=
       match expr with
       | Var v => if eqb v old then new else expr
       | Combination expr1 expr2 => Combination (substitute expr1) (substitute expr2)
-      | Abstraction bound body => Abstraction bound (substitute body)
+      | Abstraction bound body => if eqb bound old 
+                                  then expr 
+                                  else Abstraction bound (substitute body)
       end
   in substitute expr.
 
@@ -93,4 +94,46 @@ Compute eval (((and) (T)) (T)). (* T *)
 Compute eval (((and) (T)) (F)). (* F *)
 Compute eval (((and) (F)) (T)). (* F *)
 Compute eval (((and) (F)) (F)). (* F *)
+
+Fixpoint prettyPrint (expr : Expr) : string :=
+  match expr with
+  | Var s => s
+  | Combination e1 e2 => "(" ++ (prettyPrint e1) ++ ")" ++ "(" ++ (prettyPrint e2) ++ ")"
+  | Abstraction bound body => "L " ++ bound ++ "." ++ (prettyPrint body) 
+  end.
+
+Compute eval ((L "x" | L "z" | $"x") ($"y")).
+
+Definition y1 := ($"f") (($"x") ($"x")).
+Definition y2 := L "x" | (($"f") (($"x") ($"x"))).
+
+Definition Y := L "f" | L "x" | ((y1) (y2)).
+
+Compute prettyPrint Y.
+
+Compute prettyPrint (match eval ((Y) ($"g")) with Some e' => e' | None => $"jeepus creepus" end).
+
+
+
+Definition e0 := (Y) ($"g").
+Compute prettyPrint e0.
+
+Definition e1 := match step e0 with Some e' => e' | None => $"jeepus creepus" end.
+Compute prettyPrint e1.
+Definition e2 := match step e1 with Some e' => e' | None => $"jeepus creepus" end.
+Compute prettyPrint e2.
+
+Compute prettyPrint (match e with Some e' => e' | None => $"x" end).
+
+
+
+
+
+
+
+
+
+
+
+
 
